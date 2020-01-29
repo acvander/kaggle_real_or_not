@@ -40,10 +40,12 @@ def prepare_data(train_df: pd.DataFrame,
     train_text = tokenizer.texts_to_sequences(train_df['text'])
     train_keyword = tokenizer.texts_to_sequences(train_df['keyword'])
     train_location = tokenizer.texts_to_sequences(train_df['location'])
+    train_id = train_df['id'].to_numpy()
 
     test_text = tokenizer.texts_to_sequences(test_df['text'])
     test_keyword = tokenizer.texts_to_sequences(test_df['keyword'])
     test_location = tokenizer.texts_to_sequences(test_df['location'])
+    test_id = test_df['id'].to_numpy()
 
     label = train_df['target'].to_list()
     label = tf.keras.utils.to_categorical(label)
@@ -61,12 +63,14 @@ def prepare_data(train_df: pd.DataFrame,
         'text': train_text,
         'keyword': train_keyword,
         'location': train_location,
-        'target': label
+        'target': label,
+        'id': train_id
     }
     test_data = {
         'text': test_text,
         'keyword': test_keyword,
         'location': test_location,
+        'id': test_id
     }
     max_lens = {
         'text': max_text_len,
@@ -97,11 +101,9 @@ def load_embeddings(tokenizer: Tokenizer,
     return embedding_matrix
 
 
-def preprocess(
-    train_df: pd.DataFrame,
-    test_df: pd.DataFrame,
-    num_words: int = 10000
-) -> Tuple[pd.DataFrame, pd.DataFrame, np.array, Dict]:
+def preprocess(train_df: pd.DataFrame,
+               test_df: pd.DataFrame,
+               num_words: int = 10000) -> Tuple[Dict, Dict, np.array, Dict]:
     clean_train_df = clean_data(train_df)
     clean_test_df = clean_data(test_df)
 

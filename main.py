@@ -9,9 +9,12 @@ from absl import app, flags
 from train_model import train_model
 from preprocessing import preprocess
 from build_model import build_model
+from gen_submission import gen_submission
 
 FLAGS = flags.FLAGS
 
+flags.DEFINE_enum('mode', 'gen_submission', ['train', 'gen_submission'],
+                  'defines mode to run app')
 flags.DEFINE_string('train_path', './data/train.csv', 'path of train.csv')
 flags.DEFINE_string('test_path', './data/test.csv', 'path of train.csv')
 flags.DEFINE_integer('num_words', 35000, 'number of words to use')
@@ -25,11 +28,16 @@ def main(argv):
     train_data, test_data, embeddings, pad_lens = preprocess(
         train_df, test_df, num_words=FLAGS.num_words)
 
-    model = train_model(train_data,
-                        embeddings,
-                        pad_lens,
-                        num_words=FLAGS.num_words,
-                        model_path=FLAGS.model_path)
+    if FLAGS.mode == 'train':
+        model = train_model(train_data,
+                            embeddings,
+                            pad_lens,
+                            num_words=FLAGS.num_words,
+                            model_path=FLAGS.model_path)
+    elif FLAGS.mode == 'gen_submission':
+        gen_submission(test_data, model_path=FLAGS.model_path)
+    else:
+        raise Exception('improper selection for mode')
 
     return
 
