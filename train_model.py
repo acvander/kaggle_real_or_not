@@ -3,7 +3,7 @@ from typing import Dict
 import numpy as np
 import tensorflow as tf
 
-from tensorflow_addons.metrics import FBetaScore, F1Score
+from tensorflow_addons.metrics import F1Score
 
 from build_model import build_model
 
