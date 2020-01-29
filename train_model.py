@@ -22,7 +22,7 @@ def train_model(train_data: Dict,
     metrics = []
     # f1score = CustomF1Score()
     # metrics.append(f1score)
-    metrics.append(tf.keras.metrics.Recall())
+    # metrics.append(tf.keras.metrics.Recall())
     # metrics.append(FBetaScore(1))
     metrics.append(F1Score(2, average='micro'))
     model.compile(loss="binary_crossentropy",
