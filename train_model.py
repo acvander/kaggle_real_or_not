@@ -41,6 +41,7 @@ def train_model(train_data: Dict,
               epochs=25,
               batch_size=128,
               verbose=1,
+              shuffle=True,
               callbacks=callbacks)
 
     model.save('./tmp/model.h5')
