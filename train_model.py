@@ -3,6 +3,8 @@ from typing import Dict
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_addons.metrics import FBetaScore, F1Score
+
 from build_model import build_model
 
 
@@ -22,14 +24,14 @@ def train_model(train_data: Dict,
     # metrics.append(f1score)
     metrics.append(tf.keras.metrics.Recall())
     # metrics.append(FBetaScore(1))
-    # metrics.append(F1Score(2))
+    metrics.append(F1Score(2, average='micro'))
     model.compile(loss="binary_crossentropy",
                   optimizer='adam',
                   metrics=metrics)
 
     callbacks = []
     checkpoint = tf.keras.callbacks.ModelCheckpoint(model_path,
-                                                    'val_recall',
+                                                    'val_f1_score',
                                                     verbose=1,
                                                     save_best_only=True,
                                                     mode='max')

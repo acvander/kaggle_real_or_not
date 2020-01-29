@@ -1,19 +1,13 @@
-from train_model import train_model
-from preprocessing import preprocess
-from metrics.CustomF1 import CustomF1Score
 from typing import Dict, Sequence, Tuple
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras import layers
-
-from tensorflow_addons.metrics import FBetaScore, F1Score
-
 from absl import app, flags
 
+from train_model import train_model
+from preprocessing import preprocess
 from build_model import build_model
 
 FLAGS = flags.FLAGS
@@ -36,6 +30,7 @@ def main(argv):
                         pad_lens,
                         num_words=FLAGS.num_words,
                         model_path=FLAGS.model_path)
+
     return
 
 
