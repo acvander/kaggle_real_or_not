@@ -12,28 +12,32 @@ from tensorflow.keras import layers
 
 from tensorflow_addons.metrics import FBetaScore, F1Score
 
+from absl import app, flags
+
 from build_model import build_model
 
-TRAIN_PATH = './data/train.csv'
-TEST_PATH = './data/test.csv'
-NUM_WORDS = 35000
-MODEL_PATH = './tmp/model.h5'
+FLAGS = flags.FLAGS
+
+flags.DEFINE_string('train_path', './data/train.csv', 'path of train.csv')
+flags.DEFINE_string('test_path', './data/test.csv', 'path of train.csv')
+flags.DEFINE_integer('num_words', 35000, 'number of words to use')
+flags.DEFINE_string('model_path', './tmp/model.h5', 'path to save model')
 
 
-def main():
-    train_df = pd.read_csv(TRAIN_PATH)
-    test_df = pd.read_csv(TEST_PATH)
+def main(argv):
+    train_df = pd.read_csv(FLAGS.train_path)
+    test_df = pd.read_csv(FLAGS.test_path)
 
     train_data, test_data, embeddings, pad_lens = preprocess(
-        train_df, test_df, num_words=NUM_WORDS)
+        train_df, test_df, num_words=FLAGS.num_words)
 
     model = train_model(train_data,
                         embeddings,
                         pad_lens,
-                        num_words=NUM_WORDS,
-                        model_path=MODEL_PATH)
+                        num_words=FLAGS.num_words,
+                        model_path=FLAGS.model_path)
     return
 
 
 if __name__ == "__main__":
-    main()
+    app.run(main)
