@@ -32,7 +32,8 @@ def train_model(train_data: Dict,
                 num_words: int = 1000,
                 model_path: str = './tmp/model.h5',
                 epochs: int = 25,
-                net_scale: int = 64) -> tf.keras.models.Model:
+                net_scale: int = 64,
+                learn_rate: float = 0.001) -> tf.keras.models.Model:
     model = build_model(embeddings,
                         pad_lens,
                         tokenizer_len=num_words,
@@ -44,8 +45,10 @@ def train_model(train_data: Dict,
     # metrics.append(tf.keras.metrics.Recall())
     # metrics.append(FBetaScore(1))
     metrics.append(F1Score(2, average='micro'))
+
+    optimizer = tf.keras.optimizers.Adam(lr=learn_rate)
     model.compile(loss="binary_crossentropy",
-                  optimizer='adam',
+                  optimizer=optimizer,
                   metrics=metrics)
 
     callbacks = []
@@ -55,6 +58,23 @@ def train_model(train_data: Dict,
                                                     save_best_only=True,
                                                     mode='max')
     callbacks.append(checkpoint)
+
+    early_stop = tf.keras.callbacks.EarlyStopping('val_f1_score',
+                                                  min_delta=0.01,
+                                                  mode='max',
+                                                  patience=7,
+                                                  verbose=1)
+    callbacks.append(early_stop)
+
+    reduce_lr = tf.keras.callbacks.ReduceLROnPlateau('val_f1_score',
+                                                     factor=0.1,
+                                                     min_delta=0.01,
+                                                     mode='max',
+                                                     patience=3,
+                                                     min_lr=learn_rate *
+                                                     10**-3,
+                                                     verbose=1)
+    callbacks.append(reduce_lr)
 
     history = model.fit(train_data,
                         train_data['target'],
