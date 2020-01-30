@@ -5,10 +5,13 @@ import tensorflow as tf
 from tensorflow.keras import layers
 
 
-def build_model(embedding_matrix, max_lens: Dict, tokenizer_len: int = 100):
+def build_model(embedding_matrix,
+                max_lens: Dict,
+                tokenizer_len: int = 100,
+                net_scale: int = 64) -> tf.keras.Model:
     embedding_size = 100
     base_sizes = np.array([4, 2, 1])
-    lstm_sizes = base_sizes * 64
+    lstm_sizes = base_sizes * net_scale
     input_text = layers.Input(shape=(max_lens['text'], ), name='text')
     embedding_text = layers.Embedding(tokenizer_len,
                                       embedding_size,
