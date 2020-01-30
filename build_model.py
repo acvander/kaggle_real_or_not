@@ -6,11 +6,12 @@ from tensorflow.keras import layers
 
 
 def build_model(embedding_matrix, max_lens: Dict, tokenizer_len: int = 100):
+    embedding_size = 100
     base_sizes = np.array([4, 2, 1])
     lstm_sizes = base_sizes * 64
     input_text = layers.Input(shape=(max_lens['text'], ), name='text')
     embedding_text = layers.Embedding(tokenizer_len,
-                                      100,
+                                      embedding_size,
                                       weights=[embedding_matrix],
                                       input_length=max_lens['text'],
                                       trainable=False)(input_text)
@@ -25,7 +26,7 @@ def build_model(embedding_matrix, max_lens: Dict, tokenizer_len: int = 100):
 
     input_ky = layers.Input(shape=(max_lens['keyword'], ), name='keyword')
     embedding_ky = layers.Embedding(tokenizer_len,
-                                    100,
+                                    embedding_size,
                                     weights=[embedding_matrix],
                                     input_length=max_lens['keyword'],
                                     trainable=False)(input_ky)
@@ -37,7 +38,7 @@ def build_model(embedding_matrix, max_lens: Dict, tokenizer_len: int = 100):
 
     input_loc = layers.Input(shape=(max_lens['location'], ), name='location')
     embedding_loc = layers.Embedding(tokenizer_len,
-                                     100,
+                                     embedding_size,
                                      weights=[embedding_matrix],
                                      input_length=max_lens['location'],
                                      trainable=False)(input_loc)
@@ -47,7 +48,25 @@ def build_model(embedding_matrix, max_lens: Dict, tokenizer_len: int = 100):
     lstm_loc_3 = layers.LSTM(lstm_sizes[2], return_sequences=True)(lstm_loc_2)
     lstm_loc_4 = layers.LSTM(lstm_sizes[2])(lstm_loc_3)
 
-    merge = layers.concatenate([lstm_text_4, lstm_ky_4, lstm_loc_4])
+    # hashtag branch
+    input_hashtag = layers.Input(shape=(max_lens['hashtags'], ),
+                                 name='hashtags')
+    embedding_hashtag = layers.Embedding(tokenizer_len,
+                                         embedding_size,
+                                         weights=[embedding_matrix],
+                                         input_length=max_lens['hashtags'],
+                                         trainable=False)(input_hashtag)
+    dropout_hashtag = layers.Dropout(0.2)(embedding_hashtag)
+    lstm_hashtag_1 = layers.LSTM(lstm_sizes[1],
+                                 return_sequences=True)(dropout_hashtag)
+    lstm_hashtag_2 = layers.LSTM(lstm_sizes[1],
+                                 return_sequences=True)(lstm_hashtag_1)
+    lstm_hashtag_3 = layers.LSTM(lstm_sizes[1],
+                                 return_sequences=True)(lstm_hashtag_2)
+    lstm_hashtag_4 = layers.LSTM(lstm_sizes[1])(lstm_hashtag_3)
+
+    merge = layers.concatenate(
+        [lstm_text_4, lstm_ky_4, lstm_loc_4, lstm_hashtag_4])
 
     dropout = layers.Dropout(0.5)(merge)
     dense1 = layers.Dense(512, activation='relu')(dropout)
@@ -57,7 +76,8 @@ def build_model(embedding_matrix, max_lens: Dict, tokenizer_len: int = 100):
     model = tf.keras.Model(inputs={
         'text': input_text,
         'keyword': input_ky,
-        'location': input_loc
+        'location': input_loc,
+        'hashtags': input_hashtag
     },
                            outputs=output)
     tf.keras.utils.plot_model(model,
