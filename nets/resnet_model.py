@@ -5,10 +5,10 @@ import tensorflow as tf
 from tensorflow.keras import layers
 
 
-def build_model(embedding_matrix,
-                max_lens: Dict,
-                tokenizer_len: int = 100,
-                net_scale: int = 64) -> tf.keras.Model:
+def resnet_model(embedding_matrix,
+                 max_lens: Dict,
+                 tokenizer_len: int = 100,
+                 net_scale: int = 64) -> tf.keras.Model:
     embedding_size = 100
     base_sizes = np.array([4, 2, 1])
     lstm_sizes = base_sizes * net_scale
@@ -72,9 +72,14 @@ def build_model(embedding_matrix,
         [lstm_text_4, lstm_ky_4, lstm_loc_4, lstm_hashtag_4])
 
     dropout = layers.Dropout(0.5)(merge)
-    dense1 = layers.Dense(512, activation='relu')(dropout)
-    dense2 = layers.Dense(256, activation='relu')(dense1)
-    output = layers.Dense(2, activation='softmax')(dense2)
+    dense1 = layers.Dense(1024, activation='relu')(dropout)
+    res1 = layers.concatenate([merge, dense1])
+
+    dropout2 = layers.Dropout(0.5)(res1)
+    dense2 = layers.Dense(512, activation='relu')(dropout2)
+    res2 = layers.concatenate([res1, dense2])
+
+    output = layers.Dense(2, activation='softmax')(res2)
 
     model = tf.keras.Model(inputs={
         'text': input_text,
