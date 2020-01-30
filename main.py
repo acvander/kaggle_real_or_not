@@ -20,6 +20,8 @@ flags.DEFINE_string('train_path', './data/train.csv', 'path of train.csv')
 flags.DEFINE_string('test_path', './data/test.csv', 'path of train.csv')
 flags.DEFINE_integer('num_words', 35000, 'number of words to use')
 flags.DEFINE_string('model_path', './tmp/model.h5', 'path to save model')
+flags.DEFINE_integer('epochs', 25, 'number of training epochs')
+flags.DEFINE_integer('net_scale', 64, 'scaling for network sizes')
 
 
 def main(argv):
@@ -38,7 +40,9 @@ def main(argv):
                             embeddings,
                             pad_lens,
                             num_words=FLAGS.num_words,
-                            model_path=FLAGS.model_path)
+                            model_path=FLAGS.model_path,
+                            epochs=FLAGS.epochs,
+                            net_scale=FLAGS.net_scale)
     elif FLAGS.mode == 'gen_submission':
         train_df = pd.read_csv('./tmp/train.csv',
                                converters={"hashtags": literal_eval})
