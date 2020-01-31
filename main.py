@@ -23,7 +23,9 @@ flags.DEFINE_enum('mode', 'gen_submission',
 flags.DEFINE_string('train_path', './data/train.csv', 'path of train.csv')
 flags.DEFINE_string('test_path', './data/test.csv', 'path of train.csv')
 flags.DEFINE_integer('num_words', 35000, 'number of words to use')
-flags.DEFINE_string('model_path', './tmp/model', 'path to save model')
+flags.DEFINE_string('model_dir', './tmp/model/',
+                    'directory to which to save model')
+flags.DEFINE_string('model_name', 'model', 'model name')
 flags.DEFINE_integer('epochs', 25, 'number of training epochs')
 flags.DEFINE_integer('net_scale', 64, 'scaling for network sizes')
 
@@ -45,7 +47,8 @@ def main(argv):
                             embeddings,
                             pad_lens,
                             num_words=FLAGS.num_words,
-                            model_path='./tmp/k_folds/model',
+                            model_dir=FLAGS.model_dir,
+                            model_name=FLAGS.model_name,
                             fig_path='./tmp/k_folds/history',
                             epochs=FLAGS.epochs,
                             net_scale=FLAGS.net_scale)
@@ -60,7 +63,8 @@ def main(argv):
                               embeddings,
                               pad_lens,
                               num_words=FLAGS.num_words,
-                              model_path='./tmp/k_folds/model',
+                              model_dir=FLAGS.model_dir,
+                              model_name=FLAGS.model_name,
                               fig_path='./tmp/k_folds/history',
                               epochs=FLAGS.epochs,
                               net_scale=FLAGS.net_scale)

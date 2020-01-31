@@ -1,6 +1,4 @@
-from preprocessing.k_folds import k_fold_split
-from nets.resnet_model import resnet_model
-from nets import base_model
+import os
 from typing import Dict
 
 import numpy as np
@@ -8,6 +6,10 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 from tensorflow_addons.metrics import F1Score
+
+from preprocessing.k_folds import k_fold_split
+from nets.resnet_model import resnet_model
+from nets import base_model
 
 
 def _plot_training_data(history: tf.keras.callbacks.History, fig_path: str):
@@ -77,14 +79,18 @@ def train_model(train_data: Dict,
                 embeddings: np.array,
                 pad_lens: Dict,
                 num_words: int = 1000,
-                model_path: str = './tmp/model',
+                model_dir: str = './tmp/model/',
+                model_name: str = 'model',
                 fig_path: str = './tmp/history.png',
                 epochs: int = 25,
                 net_scale: int = 64,
                 learn_rate: float = 0.001) -> tf.keras.models.Model:
+    # create dir if needed
+    os.makedirs(model_dir, exist_ok=True)
 
+    model_path = '{}.h5'.format(os.path.join(model_dir, model_name))
     k_folds = k_fold_split(train_data, shuffle=True)
-    (valid_idxs, train_idxs) = k_folds[0]
+    (train_idxs, valid_idxs) = k_folds[0]
     train_fold_data = {
         key: val[train_idxs]
         for (key, val) in train_data.items()
@@ -100,8 +106,7 @@ def train_model(train_data: Dict,
                          net_scale=net_scale)
 
     model = compile_model(model)
-    callbacks = create_callbacks(model_path='{}.h5'.format(model_path),
-                                 epochs=epochs)
+    callbacks = create_callbacks(model_path=model_path, epochs=epochs)
 
     history = model.fit(train_fold_data,
                         train_fold_data['target'],
@@ -114,6 +119,7 @@ def train_model(train_data: Dict,
                         callbacks=callbacks)
 
     model.save(model_path)
-    _plot_training_data(history.history, '{}.png'.format(fig_path))
+    _plot_training_data(history.history,
+                        '{}.png'.format(os.path.join(model_dir, fig_path)))
 
     return model
