@@ -1,3 +1,4 @@
+import os
 from typing import Dict
 
 import numpy as np
@@ -6,8 +7,11 @@ import tensorflow as tf
 from tensorflow_addons.metrics import F1Score
 
 
-def gen_submission(test_data: Dict, model_path: str = './tmp/model.h5'):
-    submission_path = './tmp/submission.csv'
+def gen_submission(test_data: Dict,
+                   model_dir: str = './tmp/',
+                   model_name: str = 'model'):
+    submission_path = os.path.join(model_dir, 'submission.csv')
+    model_path = os.path.join(model_dir, model_name) + '.h5'
     model = tf.keras.models.load_model(model_path,
                                        custom_objects={'f1_score': F1Score},
                                        compile=False)

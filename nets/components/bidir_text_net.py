@@ -8,20 +8,23 @@ from tensorflow.keras import layers
 def _add_multiple_lstms(input_layer, num_lstms: int, size: int):
     lstm_layers = []
     # initial layer
-    lstm_layers.append(layers.LSTM(size, return_sequences=True)(input_layer))
+    lstm_layers.append(
+        layers.Bidirectional(layers.LSTM(size,
+                                         return_sequences=True))(input_layer))
     for i in range(1, num_lstms - 1):
         lstm_layers.append(
-            layers.LSTM(size, return_sequences=True)(lstm_layers[-1]))
+            layers.Bidirectional(layers.LSTM(size, return_sequences=True))(
+                lstm_layers[-1]))
     # last layer
-    output_layer = layers.LSTM(size)(lstm_layers[-1])
+    output_layer = layers.Bidirectional(layers.LSTM(size))(lstm_layers[-1])
     return output_layer
 
 
-def text_net(embedding_matrix,
-             max_lens: Dict,
-             tokenizer_len: int = 100,
-             net_scale: int = 64,
-             lstm_depth: int = 4):
+def bidir_text_net(embedding_matrix,
+                   max_lens: Dict,
+                   tokenizer_len: int = 100,
+                   net_scale: int = 64,
+                   lstm_depth: int = 6):
     embedding_size = 100
     embedding_dropout = 0.5
     mask_zero = False

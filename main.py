@@ -74,7 +74,9 @@ def main(argv):
         test_df = pd.read_csv('./tmp/test.csv')
         train_data, test_data, embeddings, pad_lens = prepare_data(
             train_df, test_df, num_words=FLAGS.num_words)
-        gen_submission(test_data, model_path=FLAGS.model_path)
+        gen_submission(test_data,
+                       model_dir=FLAGS.model_dir,
+                       model_name=FLAGS.model_name)
     else:
         raise Exception('improper selection for mode')
 

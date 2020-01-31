@@ -1,3 +1,4 @@
+from nets.components.bidir_text_net import bidir_text_net
 from nets.components.text_net import text_net
 from typing import Dict
 
@@ -12,7 +13,8 @@ def resnet_model(embedding_matrix,
                  net_scale: int = 64) -> tf.keras.Model:
 
     ((input_text, input_ky, input_loc, input_hashtag),
-     merge) = text_net(embedding_matrix, max_lens, tokenizer_len, net_scale)
+     merge) = bidir_text_net(embedding_matrix, max_lens, tokenizer_len,
+                             net_scale)
 
     dropout = layers.Dropout(0.5)(merge)
     dense1 = layers.Dense(1024, activation='relu')(dropout)
