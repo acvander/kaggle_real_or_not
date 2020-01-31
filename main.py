@@ -8,7 +8,6 @@ from absl import app, flags
 
 from train_model import train_model
 from preprocessing import preprocess, prepare_data
-from build_model import build_model
 from gen_submission import gen_submission
 
 FLAGS = flags.FLAGS
