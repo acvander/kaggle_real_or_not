@@ -49,7 +49,7 @@ def main(argv):
                             num_words=FLAGS.num_words,
                             model_dir=FLAGS.model_dir,
                             model_name=FLAGS.model_name,
-                            fig_path='./tmp/k_folds/history',
+                            fig_name='history',
                             epochs=FLAGS.epochs,
                             net_scale=FLAGS.net_scale)
     elif FLAGS.mode == 'train_k_fold':
@@ -65,7 +65,7 @@ def main(argv):
                               num_words=FLAGS.num_words,
                               model_dir=FLAGS.model_dir,
                               model_name=FLAGS.model_name,
-                              fig_path='./tmp/k_folds/history',
+                              fig_name='history',
                               epochs=FLAGS.epochs,
                               net_scale=FLAGS.net_scale)
     elif FLAGS.mode == 'gen_submission':

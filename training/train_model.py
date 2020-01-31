@@ -81,7 +81,7 @@ def train_model(train_data: Dict,
                 num_words: int = 1000,
                 model_dir: str = './tmp/model/',
                 model_name: str = 'model',
-                fig_path: str = './tmp/history.png',
+                fig_name: str = 'history',
                 epochs: int = 25,
                 net_scale: int = 64,
                 learn_rate: float = 0.001) -> tf.keras.models.Model:
@@ -120,6 +120,6 @@ def train_model(train_data: Dict,
 
     model.save(model_path)
     _plot_training_data(history.history,
-                        '{}.png'.format(os.path.join(model_dir, fig_path)))
+                        '{}.png'.format(os.path.join(model_dir, fig_name)))
 
     return model
