@@ -10,6 +10,9 @@ def resnet_model(embedding_matrix,
                  tokenizer_len: int = 100,
                  net_scale: int = 64) -> tf.keras.Model:
     embedding_size = 100
+    embedding_dropout = 0.5
+    mask_zero = False
+
     base_sizes = np.array([4, 2, 1])
     lstm_sizes = base_sizes * net_scale
     input_text = layers.Input(shape=(max_lens['text'], ), name='text')
@@ -17,8 +20,9 @@ def resnet_model(embedding_matrix,
                                       embedding_size,
                                       weights=[embedding_matrix],
                                       input_length=max_lens['text'],
-                                      trainable=False)(input_text)
-    dropout_text = layers.Dropout(0.2)(embedding_text)
+                                      trainable=False,
+                                      mask_zero=mask_zero)(input_text)
+    dropout_text = layers.Dropout(embedding_dropout)(embedding_text)
     lstm_text_1 = layers.LSTM(lstm_sizes[0],
                               return_sequences=True)(dropout_text)
     lstm_text_2 = layers.LSTM(lstm_sizes[0],
@@ -32,8 +36,9 @@ def resnet_model(embedding_matrix,
                                     embedding_size,
                                     weights=[embedding_matrix],
                                     input_length=max_lens['keyword'],
-                                    trainable=False)(input_ky)
-    dropout_ky = layers.Dropout(0.2)(embedding_ky)
+                                    trainable=False,
+                                    mask_zero=mask_zero)(input_ky)
+    dropout_ky = layers.Dropout(embedding_dropout)(embedding_ky)
     lstm_ky_1 = layers.LSTM(lstm_sizes[1], return_sequences=True)(dropout_ky)
     lstm_ky_2 = layers.LSTM(lstm_sizes[1], return_sequences=True)(lstm_ky_1)
     lstm_ky_3 = layers.LSTM(lstm_sizes[1], return_sequences=True)(lstm_ky_2)
@@ -44,8 +49,9 @@ def resnet_model(embedding_matrix,
                                      embedding_size,
                                      weights=[embedding_matrix],
                                      input_length=max_lens['location'],
-                                     trainable=False)(input_loc)
-    dropout_loc = layers.Dropout(0.2)(embedding_loc)
+                                     trainable=False,
+                                     mask_zero=mask_zero)(input_loc)
+    dropout_loc = layers.Dropout(embedding_dropout)(embedding_loc)
     lstm_loc_1 = layers.LSTM(lstm_sizes[2], return_sequences=True)(dropout_loc)
     lstm_loc_2 = layers.LSTM(lstm_sizes[2], return_sequences=True)(lstm_loc_1)
     lstm_loc_3 = layers.LSTM(lstm_sizes[2], return_sequences=True)(lstm_loc_2)
@@ -58,8 +64,9 @@ def resnet_model(embedding_matrix,
                                          embedding_size,
                                          weights=[embedding_matrix],
                                          input_length=max_lens['hashtags'],
-                                         trainable=False)(input_hashtag)
-    dropout_hashtag = layers.Dropout(0.2)(embedding_hashtag)
+                                         trainable=False,
+                                         mask_zero=mask_zero)(input_hashtag)
+    dropout_hashtag = layers.Dropout(embedding_dropout)(embedding_hashtag)
     lstm_hashtag_1 = layers.LSTM(lstm_sizes[1],
                                  return_sequences=True)(dropout_hashtag)
     lstm_hashtag_2 = layers.LSTM(lstm_sizes[1],
