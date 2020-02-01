@@ -28,6 +28,16 @@ flags.DEFINE_string('model_dir', './tmp/model/',
 flags.DEFINE_string('model_name', 'model', 'model name')
 flags.DEFINE_integer('epochs', 25, 'number of training epochs')
 flags.DEFINE_integer('net_scale', 64, 'scaling for network sizes')
+flags.DEFINE_float('subset', 1.0, 'subset ratio of data')
+
+
+def subset_data(data: Dict, subset_ratio: float = 1.0):
+    new_data = {}
+    for (key, val) in data.items():
+        data_len = len(val)
+        subset_len = int(data_len * subset_ratio)
+        new_data[key] = val[:subset_len]
+    return new_data
 
 
 def main(argv):
@@ -43,15 +53,17 @@ def main(argv):
         train_data, test_data, embeddings, pad_lens = prepare_data(
             train_df, test_df, num_words=FLAGS.num_words)
 
-        model = train_model(train_data,
-                            embeddings,
-                            pad_lens,
-                            num_words=FLAGS.num_words,
-                            model_dir=FLAGS.model_dir,
-                            model_name=FLAGS.model_name,
-                            fig_name='history',
-                            epochs=FLAGS.epochs,
-                            net_scale=FLAGS.net_scale)
+        model = train_model(
+            train_data,
+            embeddings,
+            pad_lens,
+            num_words=FLAGS.num_words,
+            model_dir=FLAGS.model_dir,
+            model_name=FLAGS.model_name,
+            fig_name='history',
+            epochs=FLAGS.epochs,
+            net_scale=FLAGS.net_scale,
+        )
     elif FLAGS.mode == 'train_k_fold':
         train_df = pd.read_csv('./tmp/train.csv',
                                converters={"hashtags": literal_eval})
@@ -59,6 +71,7 @@ def main(argv):
         train_data, test_data, embeddings, pad_lens = prepare_data(
             train_df, test_df, num_words=FLAGS.num_words)
 
+        train_data = subset_data(train_data, FLAGS.subset)
         model = train_k_folds(train_data,
                               embeddings,
                               pad_lens,

@@ -1,5 +1,6 @@
 import os
 from typing import Dict, List
+from utils.plot.plot import plot_k_fold_data, plot_training_data
 
 import numpy as np
 import tensorflow as tf
@@ -10,40 +11,6 @@ from tensorflow_addons.metrics import F1Score
 from preprocessing.k_folds import k_fold_split
 from nets.resnet_model import resnet_model
 from nets import base_model
-
-
-def _plot_training_data(history: tf.keras.callbacks.History, fig_path: str):
-    fig, axs = plt.subplots(nrows=2, ncols=1)
-    axs[0].plot(history['f1_score'], 'b')
-    axs[0].plot(history['val_f1_score'], 'r')
-    axs[0].set_title('F1 Score')
-    axs[0].set_ylim(bottom=0.5, top=1)
-
-    axs[1].plot(history['loss'], 'b')
-    axs[1].plot(history['val_loss'], 'r')
-    axs[1].set_title('Loss')
-    axs[1].set_ylim(bottom=0, top=1)
-
-    plt.tight_layout()
-    plt.savefig(fig_path)
-    return
-
-
-def _plot_k_fold_data(histories: List[tf.keras.callbacks.History],
-                      fig_path: str):
-    fig, axs = plt.subplots(nrows=4, ncols=1)
-    colors = ['b', 'g', 'r', 'c', 'm', 'y']
-    for i, history in enumerate(histories):
-        axs[0].plot(history.history['loss'], colors[i])
-        axs[0].set_title('Loss')
-        axs[1].plot(history.history['val_loss'], colors[i])
-        axs[1].set_title('Val Loss')
-        axs[2].plot(history.history['f1_score'], colors[i])
-        axs[2].set_title('F1 Score')
-        axs[3].plot(history.history['val_f1_score'], colors[i])
-        axs[3].set_title('Val F1 Score')
-    plt.tight_layout()
-    plt.savefig(fig_path)
 
 
 def compile_model(model,
@@ -109,6 +76,7 @@ def train_k_folds(train_data: Dict,
     k_folds = k_fold_split(train_data)
     histories = []
     for i, (valid_idxs, train_idxs) in enumerate(k_folds):
+        print('training fold #{}'.format(i + 1))
         model_path = '{}_{}.h5'.format(os.path.join(model_dir, model_name), i)
         train_fold_data = {
             key: val[train_idxs]
@@ -139,9 +107,9 @@ def train_k_folds(train_data: Dict,
 
         model.save(model_path)
         histories.append(history)
-        _plot_training_data(
+        plot_training_data(
             history.history,
             '{}_{}.png'.format(os.path.join(model_dir, fig_name), i))
-    _plot_k_fold_data(
+    plot_k_fold_data(
         histories, '{}_combined.png'.format(os.path.join(model_dir, fig_name)))
     return model

@@ -1,5 +1,6 @@
 import os
 from typing import Dict
+from utils.plot.plot import plot_training_data
 
 import numpy as np
 import tensorflow as tf
@@ -10,23 +11,6 @@ from tensorflow_addons.metrics import F1Score
 from preprocessing.k_folds import k_fold_split
 from nets.resnet_model import resnet_model
 from nets import base_model
-
-
-def _plot_training_data(history: tf.keras.callbacks.History, fig_path: str):
-    fig, axs = plt.subplots(nrows=2, ncols=1)
-    axs[0].plot(history['f1_score'], 'b')
-    axs[0].plot(history['val_f1_score'], 'r')
-    axs[0].set_title('F1 Score')
-    axs[0].set_ylim(bottom=0.5, top=1)
-
-    axs[1].plot(history['loss'], 'b')
-    axs[1].plot(history['val_loss'], 'r')
-    axs[1].set_title('Loss')
-    axs[1].set_ylim(bottom=0, top=1)
-
-    plt.tight_layout()
-    plt.savefig(fig_path)
-    return
 
 
 def compile_model(model,
@@ -119,7 +103,7 @@ def train_model(train_data: Dict,
                         callbacks=callbacks)
 
     model.save(model_path)
-    _plot_training_data(history.history,
-                        '{}.png'.format(os.path.join(model_dir, fig_name)))
+    plot_training_data(history.history,
+                       '{}.png'.format(os.path.join(model_dir, fig_name)))
 
     return model
