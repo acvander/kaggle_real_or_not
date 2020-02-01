@@ -1,5 +1,5 @@
 import os
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
 import tensorflow as tf
@@ -27,6 +27,23 @@ def _plot_training_data(history: tf.keras.callbacks.History, fig_path: str):
     plt.tight_layout()
     plt.savefig(fig_path)
     return
+
+
+def _plot_k_fold_data(histories: List[tf.keras.callbacks.History],
+                      fig_path: str):
+    fig, axs = plt.subplots(nrows=4, ncols=1)
+    colors = ['b', 'g', 'r', 'c', 'm', 'y']
+    for i, history in enumerate(histories):
+        axs[0].plot(history.history['loss'], colors[i])
+        axs[0].set_title('Loss')
+        axs[1].plot(history.history['val_loss'], colors[i])
+        axs[1].set_title('Val Loss')
+        axs[2].plot(history.history['f1_score'], colors[i])
+        axs[2].set_title('F1 Score')
+        axs[3].plot(history.history['val_f1_score'], colors[i])
+        axs[3].set_title('Val F1 Score')
+    plt.tight_layout()
+    plt.savefig(fig_path)
 
 
 def compile_model(model,
@@ -90,6 +107,7 @@ def train_k_folds(train_data: Dict,
     os.makedirs(model_dir, exist_ok=True)
 
     k_folds = k_fold_split(train_data)
+    histories = []
     for i, (valid_idxs, train_idxs) in enumerate(k_folds):
         model_path = '{}_{}.h5'.format(os.path.join(model_dir, model_name), i)
         train_fold_data = {
@@ -107,9 +125,7 @@ def train_k_folds(train_data: Dict,
                              net_scale=net_scale)
 
         model = compile_model(model)
-        callbacks = create_callbacks(model_path='{}_{}.h5'.format(
-            model_path, i),
-                                     epochs=epochs)
+        callbacks = create_callbacks(model_path=model_path, epochs=epochs)
 
         history = model.fit(train_fold_data,
                             train_fold_data['target'],
@@ -122,8 +138,10 @@ def train_k_folds(train_data: Dict,
                             callbacks=callbacks)
 
         model.save(model_path)
+        histories.append(history)
         _plot_training_data(
             history.history,
             '{}_{}.png'.format(os.path.join(model_dir, fig_name), i))
-
+    _plot_k_fold_data(
+        histories, '{}_combined.png'.format(os.path.join(model_dir, fig_name)))
     return model
