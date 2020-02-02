@@ -1,3 +1,5 @@
+from nets.components.bidir_text_net import bidir_text_net
+from nets.components.text_net import text_net
 from typing import Dict
 
 import numpy as np
@@ -8,68 +10,14 @@ from tensorflow.keras import layers
 def resnet_model(embedding_matrix,
                  max_lens: Dict,
                  tokenizer_len: int = 100,
-                 net_scale: int = 64) -> tf.keras.Model:
-    embedding_size = 100
-    base_sizes = np.array([4, 2, 1])
-    lstm_sizes = base_sizes * net_scale
-    input_text = layers.Input(shape=(max_lens['text'], ), name='text')
-    embedding_text = layers.Embedding(tokenizer_len,
-                                      embedding_size,
-                                      weights=[embedding_matrix],
-                                      input_length=max_lens['text'],
-                                      trainable=False)(input_text)
-    dropout_text = layers.Dropout(0.2)(embedding_text)
-    lstm_text_1 = layers.LSTM(lstm_sizes[0],
-                              return_sequences=True)(dropout_text)
-    lstm_text_2 = layers.LSTM(lstm_sizes[0],
-                              return_sequences=True)(lstm_text_1)
-    lstm_text_3 = layers.LSTM(lstm_sizes[0],
-                              return_sequences=True)(lstm_text_2)
-    lstm_text_4 = layers.LSTM(lstm_sizes[0])(lstm_text_3)
+                 net_scale: int = 64,
+                 fig_path: str = './model.png') -> tf.keras.Model:
 
-    input_ky = layers.Input(shape=(max_lens['keyword'], ), name='keyword')
-    embedding_ky = layers.Embedding(tokenizer_len,
-                                    embedding_size,
-                                    weights=[embedding_matrix],
-                                    input_length=max_lens['keyword'],
-                                    trainable=False)(input_ky)
-    dropout_ky = layers.Dropout(0.2)(embedding_ky)
-    lstm_ky_1 = layers.LSTM(lstm_sizes[1], return_sequences=True)(dropout_ky)
-    lstm_ky_2 = layers.LSTM(lstm_sizes[1], return_sequences=True)(lstm_ky_1)
-    lstm_ky_3 = layers.LSTM(lstm_sizes[1], return_sequences=True)(lstm_ky_2)
-    lstm_ky_4 = layers.LSTM(lstm_sizes[1])(lstm_ky_3)
-
-    input_loc = layers.Input(shape=(max_lens['location'], ), name='location')
-    embedding_loc = layers.Embedding(tokenizer_len,
-                                     embedding_size,
-                                     weights=[embedding_matrix],
-                                     input_length=max_lens['location'],
-                                     trainable=False)(input_loc)
-    dropout_loc = layers.Dropout(0.2)(embedding_loc)
-    lstm_loc_1 = layers.LSTM(lstm_sizes[2], return_sequences=True)(dropout_loc)
-    lstm_loc_2 = layers.LSTM(lstm_sizes[2], return_sequences=True)(lstm_loc_1)
-    lstm_loc_3 = layers.LSTM(lstm_sizes[2], return_sequences=True)(lstm_loc_2)
-    lstm_loc_4 = layers.LSTM(lstm_sizes[2])(lstm_loc_3)
-
-    # hashtag branch
-    input_hashtag = layers.Input(shape=(max_lens['hashtags'], ),
-                                 name='hashtags')
-    embedding_hashtag = layers.Embedding(tokenizer_len,
-                                         embedding_size,
-                                         weights=[embedding_matrix],
-                                         input_length=max_lens['hashtags'],
-                                         trainable=False)(input_hashtag)
-    dropout_hashtag = layers.Dropout(0.2)(embedding_hashtag)
-    lstm_hashtag_1 = layers.LSTM(lstm_sizes[1],
-                                 return_sequences=True)(dropout_hashtag)
-    lstm_hashtag_2 = layers.LSTM(lstm_sizes[1],
-                                 return_sequences=True)(lstm_hashtag_1)
-    lstm_hashtag_3 = layers.LSTM(lstm_sizes[1],
-                                 return_sequences=True)(lstm_hashtag_2)
-    lstm_hashtag_4 = layers.LSTM(lstm_sizes[1])(lstm_hashtag_3)
-
-    merge = layers.concatenate(
-        [lstm_text_4, lstm_ky_4, lstm_loc_4, lstm_hashtag_4])
+    ((input_text, input_loc, input_ky, input_hashtag),
+     merge) = bidir_text_net(embedding_matrix,
+                             max_lens,
+                             tokenizer_len,
+                             net_scale=net_scale)
 
     dropout = layers.Dropout(0.5)(merge)
     dense1 = layers.Dense(1024, activation='relu')(dropout)
@@ -79,7 +27,8 @@ def resnet_model(embedding_matrix,
     dense2 = layers.Dense(512, activation='relu')(dropout2)
     res2 = layers.concatenate([res1, dense2])
 
-    output = layers.Dense(2, activation='softmax')(res2)
+    final_dense = layers.Dense(2)(res2)
+    output = layers.Activation('softmax')(final_dense)
 
     model = tf.keras.Model(inputs={
         'text': input_text,
@@ -88,7 +37,5 @@ def resnet_model(embedding_matrix,
         'hashtags': input_hashtag
     },
                            outputs=output)
-    tf.keras.utils.plot_model(model,
-                              to_file="./tmp/model.png",
-                              show_shapes=True)
+    tf.keras.utils.plot_model(model, to_file=fig_path, show_shapes=True)
     return model
