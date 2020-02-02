@@ -1,3 +1,4 @@
+from nets.ensemble_model import create_ensemble_model
 import os
 from typing import Dict, List
 from utils.plot.plot import plot_k_fold_data, plot_training_data
@@ -90,7 +91,9 @@ def train_k_folds(train_data: Dict,
         model = resnet_model(embeddings,
                              pad_lens,
                              tokenizer_len=num_words,
-                             net_scale=net_scale)
+                             net_scale=net_scale,
+                             fig_path=os.path.join(model_dir,
+                                                   'model_{}.png'.format(i)))
 
         model = compile_model(model)
         callbacks = create_callbacks(model_path=model_path, epochs=epochs)
@@ -112,4 +115,6 @@ def train_k_folds(train_data: Dict,
             '{}_{}.png'.format(os.path.join(model_dir, fig_name), i))
     plot_k_fold_data(
         histories, '{}_combined.png'.format(os.path.join(model_dir, fig_name)))
-    return model
+
+    ensemble_model = create_ensemble_model(model_dir)
+    return ensemble_model

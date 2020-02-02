@@ -10,9 +10,10 @@ from tensorflow.keras import layers
 def resnet_model(embedding_matrix,
                  max_lens: Dict,
                  tokenizer_len: int = 100,
-                 net_scale: int = 64) -> tf.keras.Model:
+                 net_scale: int = 64,
+                 fig_path: str = './model.png') -> tf.keras.Model:
 
-    ((input_text, input_ky, input_loc, input_hashtag),
+    ((input_text, input_loc, input_ky, input_hashtag),
      merge) = bidir_text_net(embedding_matrix, max_lens, tokenizer_len,
                              net_scale)
 
@@ -24,7 +25,8 @@ def resnet_model(embedding_matrix,
     dense2 = layers.Dense(512, activation='relu')(dropout2)
     res2 = layers.concatenate([res1, dense2])
 
-    output = layers.Dense(2, activation='softmax')(res2)
+    final_dense = layers.Dense(2)(res2)
+    output = layers.Activation('softmax')(final_dense)
 
     model = tf.keras.Model(inputs={
         'text': input_text,
@@ -33,7 +35,5 @@ def resnet_model(embedding_matrix,
         'hashtags': input_hashtag
     },
                            outputs=output)
-    tf.keras.utils.plot_model(model,
-                              to_file="./tmp/model.png",
-                              show_shapes=True)
+    tf.keras.utils.plot_model(model, to_file=fig_path, show_shapes=True)
     return model
