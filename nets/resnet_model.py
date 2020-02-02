@@ -14,8 +14,10 @@ def resnet_model(embedding_matrix,
                  fig_path: str = './model.png') -> tf.keras.Model:
 
     ((input_text, input_loc, input_ky, input_hashtag),
-     merge) = bidir_text_net(embedding_matrix, max_lens, tokenizer_len,
-                             net_scale)
+     merge) = bidir_text_net(embedding_matrix,
+                             max_lens,
+                             tokenizer_len,
+                             net_scale=net_scale)
 
     dropout = layers.Dropout(0.5)(merge)
     dense1 = layers.Dense(1024, activation='relu')(dropout)

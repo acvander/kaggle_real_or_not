@@ -28,6 +28,7 @@ flags.DEFINE_string('model_name', 'model', 'model name')
 flags.DEFINE_integer('epochs', 25, 'number of training epochs')
 flags.DEFINE_integer('net_scale', 64, 'scaling for network sizes')
 flags.DEFINE_float('subset', 1.0, 'subset ratio of data')
+flags.DEFINE_float('learn_rate', 0.001, 'learning rate')
 
 
 def subset_data(data: Dict, subset_ratio: float = 1.0):
@@ -79,7 +80,8 @@ def main(argv):
                               model_name=FLAGS.model_name,
                               fig_name='history',
                               epochs=FLAGS.epochs,
-                              net_scale=FLAGS.net_scale)
+                              net_scale=FLAGS.net_scale,
+                              learn_rate=FLAGS.learn_rate)
     elif FLAGS.mode == 'create_ensemble':
         avg_ensemble(FLAGS.model_dir)
     elif FLAGS.mode == 'gen_submission':

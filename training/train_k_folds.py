@@ -1,4 +1,3 @@
-from nets.ensemble_model import create_ensemble_model
 import os
 from typing import Dict, List
 from utils.plot.plot import plot_k_fold_data, plot_training_data
@@ -11,6 +10,7 @@ from tensorflow_addons.metrics import F1Score
 
 from preprocessing.k_folds import k_fold_split
 from nets.resnet_model import resnet_model
+from nets.avg_ensemble import avg_ensemble
 from nets import base_model
 
 
@@ -47,7 +47,7 @@ def create_callbacks(learn_rate: float = 0.001,
                                                   verbose=1)
     callbacks.append(early_stop)
 
-    reduce_lr_patience = early_stop_patience // 2 + 1
+    reduce_lr_patience = early_stop_patience // 2 - 1
     reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
         'val_f1_score',
         factor=0.1,
@@ -74,7 +74,7 @@ def train_k_folds(train_data: Dict,
     # create dir if needed
     os.makedirs(model_dir, exist_ok=True)
 
-    k_folds = k_fold_split(train_data)
+    k_folds = k_fold_split(train_data, shuffle=True)
     histories = []
     for i, (valid_idxs, train_idxs) in enumerate(k_folds):
         print('training fold #{}'.format(i + 1))
@@ -95,7 +95,7 @@ def train_k_folds(train_data: Dict,
                              fig_path=os.path.join(model_dir,
                                                    'model_{}.png'.format(i)))
 
-        model = compile_model(model)
+        model = compile_model(model, learn_rate=learn_rate)
         callbacks = create_callbacks(model_path=model_path, epochs=epochs)
 
         history = model.fit(train_fold_data,
@@ -116,5 +116,5 @@ def train_k_folds(train_data: Dict,
     plot_k_fold_data(
         histories, '{}_combined.png'.format(os.path.join(model_dir, fig_name)))
 
-    ensemble_model = create_ensemble_model(model_dir)
+    ensemble_model = avg_ensemble(model_dir)
     return ensemble_model
