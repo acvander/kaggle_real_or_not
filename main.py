@@ -1,4 +1,5 @@
 import os
+from run_bert import run_bert
 from typing import Dict, Sequence, Tuple
 from ast import literal_eval
 
@@ -17,7 +18,8 @@ from training.train_k_folds import train_k_folds
 FLAGS = flags.FLAGS
 
 flags.DEFINE_enum('mode', 'gen_submission', [
-    'preprocess', 'train', 'train_k_fold', 'gen_submission', 'create_ensemble'
+    'preprocess', 'train', 'train_k_fold', 'train_bert', 'gen_submission',
+    'create_ensemble'
 ], 'defines mode to run app')
 flags.DEFINE_string('train_path', './data/train.csv', 'path of train.csv')
 flags.DEFINE_string('test_path', './data/test.csv', 'path of train.csv')
@@ -82,6 +84,14 @@ def main(argv):
                               epochs=FLAGS.epochs,
                               net_scale=FLAGS.net_scale,
                               learn_rate=FLAGS.learn_rate)
+    elif FLAGS.mode == 'train_bert':
+        train_df = pd.read_csv('./tmp/train.csv',
+                               converters={"hashtags": literal_eval})
+        test_df = pd.read_csv('./tmp/test.csv')
+        run_bert(train_df,
+                 test_df,
+                 model_dir=FLAGS.model_dir,
+                 model_name=FLAGS.model_name)
     elif FLAGS.mode == 'create_ensemble':
         avg_ensemble(FLAGS.model_dir)
     elif FLAGS.mode == 'gen_submission':
