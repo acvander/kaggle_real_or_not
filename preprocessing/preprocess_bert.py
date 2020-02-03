@@ -1,6 +1,10 @@
+import os
+import shelve
+
 import numpy as np
 import pandas as pd
 import tensorflow_hub as hub
+from absl import logging
 
 import spacy
 
@@ -36,16 +40,18 @@ def bert_encode(texts, tokenizer, max_len=512):
     }
 
 
-def bert_preprocess(train_df: pd.DataFrame, test_df: pd.DataFrame):
+def preprocess_bert(train_df: pd.DataFrame, test_df: pd.DataFrame):
+    bert_url = "https://tfhub.dev/tensorflow/bert_en_uncased_L-24_H-1024_A-16/1"
+    logging.info('loading spacy')
     nlp = spacy.load('en_core_web_sm')
 
+    logging.info('processing datasets')
     train_df['text_len'] = train_df['text'].apply(lambda x: len(nlp(x)))
     test_df['text_len'] = test_df['text'].apply(lambda x: len(nlp(x)))
     max_token_len = max(train_df['text_len'].max(),
                         test_df['text_len'].max()) + 2
-    bert_layer = hub.KerasLayer(
-        "https://tfhub.dev/tensorflow/bert_en_uncased_L-24_H-1024_A-16/1",
-        trainable=True)
+    logging.info('loading BERT')
+    bert_layer = hub.KerasLayer(bert_url, trainable=True)
 
     vocab_file = bert_layer.resolved_object.vocab_file.asset_path.numpy()
     do_lower_case = bert_layer.resolved_object.do_lower_case.numpy()
@@ -60,11 +66,17 @@ def bert_preprocess(train_df: pd.DataFrame, test_df: pd.DataFrame):
     test_input = bert_encode(test_df['text'].values,
                              tokenizer,
                              max_len=max_token_len)
+    logging.info('saving data to shelf')
 
-    return {
-        'train_input': train_input,
-        'train_output': train_output,
-        'test_input': test_input,
-        'bert_layer': bert_layer,
-        'max_token_len': max_token_len
-    }
+    shelf_dir = './tmp/bert_data/'
+    os.makedirs(shelf_dir, exist_ok=True)
+    shelf_path = os.path.join(shelf_dir, 'bert_shelf')
+
+    with shelve.open(shelf_path) as shelf:
+        shelf['train_input'] = train_input
+        shelf['train_output'] = train_output
+        shelf['test_input'] = test_input
+        shelf['max_token_len'] = max_token_len
+        shelf['bert_url'] = bert_url
+
+    return

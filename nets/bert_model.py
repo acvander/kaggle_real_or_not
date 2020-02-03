@@ -4,18 +4,16 @@ from tensorflow.keras.layers import Input, Bidirectional, LSTM, Dense
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam
 
+from tensorflow_addons.metrics import F1Score
+
 
 def build_bert_model(bert_layer, max_len=512):
     def inner_build_model():
         input_word_ids = Input(shape=(max_len, ),
                                dtype=tf.int32,
-                               name='input_word_ids')
-        input_mask = Input(shape=(max_len, ),
-                           dtype=tf.int32,
-                           name='input_mask')
-        segment_ids = Input(shape=(max_len, ),
-                            dtype=tf.int32,
-                            name='segment_ids')
+                               name='tokens')
+        input_mask = Input(shape=(max_len, ), dtype=tf.int32, name='masks')
+        segment_ids = Input(shape=(max_len, ), dtype=tf.int32, name='segments')
 
         _, sequence_output = bert_layer(
             [input_word_ids, input_mask, segment_ids])
@@ -29,9 +27,12 @@ def build_bert_model(bert_layer, max_len=512):
             'segment_ids': segment_ids
         },
                       outputs=out)
+
+        metrics = []
+        metrics.append(F1Score(2, average='micro'))
         model.compile(Adam(lr=2e-6),
                       loss='binary_crossentropy',
-                      metrics=['accuracy', 'mse'])
+                      metrics=metrics)
 
         return model
 
