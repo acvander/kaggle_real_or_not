@@ -28,12 +28,6 @@ def build_bert_model(bert_layer, max_len=512):
         },
                       outputs=out)
 
-        metrics = []
-        metrics.append(F1Score(2, average='micro'))
-        model.compile(Adam(lr=2e-6),
-                      loss='binary_crossentropy',
-                      metrics=metrics)
-
         return model
 
     return inner_build_model
