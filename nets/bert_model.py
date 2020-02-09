@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from tensorflow.keras.layers import Input, Bidirectional, LSTM, Dense
+from tensorflow.keras.layers import Input, Bidirectional, LSTM, Dense, Activation
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam
 
@@ -19,7 +19,8 @@ def build_bert_model(bert_layer, max_len=512):
             [input_word_ids, input_mask, segment_ids])
         clf_output = Bidirectional(LSTM(128))(sequence_output)
         #         clf_output = sequence_output[:, 0, :]
-        out = Dense(1, activation='sigmoid')(clf_output)
+        dense = Dense(1)(clf_output)
+        out = Activation('sigmoid')(dense)
 
         model = Model(inputs={
             'word_ids': input_word_ids,
