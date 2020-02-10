@@ -5,8 +5,9 @@ import numpy as np
 import pandas as pd
 import tensorflow_hub as hub
 from absl import logging
-
 import spacy
+
+from tensorflow.keras.utils import to_categorical
 
 from nets.bert.bert_tokenizer import FullTokenizer
 
@@ -61,7 +62,7 @@ def preprocess_bert(train_df: pd.DataFrame, test_df: pd.DataFrame):
     train_input = bert_encode(train_df['text'].values,
                               tokenizer,
                               max_len=max_token_len)
-    train_output = train_df['target'].to_numpy()
+    train_output = to_categorical(train_df['target'].to_numpy())
 
     test_input = bert_encode(test_df['text'].values,
                              tokenizer,
