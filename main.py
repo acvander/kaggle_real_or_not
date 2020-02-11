@@ -2,22 +2,27 @@ import os
 from typing import Dict, Sequence, Tuple
 from ast import literal_eval
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
 import pandas as pd
 
-from absl import app, flags
+from absl import app, flags, logging
 
 from training import train_model, train_k_folds
 from preprocessing import preprocess, prepare_data
 from gen_submission import gen_submission
 from nets.avg_ensemble import avg_ensemble
 from training.train_k_folds import train_k_folds
+from preprocessing.preprocess_bert import preprocess_bert
+from training.train_bert import train_bert
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+logging.set_verbosity(logging.INFO)
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_enum('mode', 'gen_submission', [
-    'preprocess', 'train', 'train_k_fold', 'gen_submission', 'create_ensemble'
+    'preprocess', 'preprocess_bert', 'train', 'train_k_fold', 'train_bert',
+    'gen_submission', 'create_ensemble'
 ], 'defines mode to run app')
 flags.DEFINE_string('train_path', './data/train.csv', 'path of train.csv')
 flags.DEFINE_string('test_path', './data/test.csv', 'path of train.csv')
@@ -46,6 +51,11 @@ def main(argv):
         train_df = pd.read_csv(FLAGS.train_path)
         test_df = pd.read_csv(FLAGS.test_path)
         preprocess(train_df, test_df, num_words=FLAGS.num_words)
+    elif FLAGS.mode == 'preprocess_bert':
+        train_df = pd.read_csv('./tmp/train.csv',
+                               converters={"hashtags": literal_eval})
+        test_df = pd.read_csv('./tmp/test.csv')
+        preprocess_bert(train_df, test_df)
     elif FLAGS.mode == 'train':
         train_df = pd.read_csv('./tmp/train.csv',
                                converters={"hashtags": literal_eval})
@@ -82,6 +92,10 @@ def main(argv):
                               epochs=FLAGS.epochs,
                               net_scale=FLAGS.net_scale,
                               learn_rate=FLAGS.learn_rate)
+    elif FLAGS.mode == 'train_bert':
+        train_bert(model_dir=FLAGS.model_dir,
+                   model_name=FLAGS.model_name,
+                   epochs=FLAGS.epochs)
     elif FLAGS.mode == 'create_ensemble':
         avg_ensemble(FLAGS.model_dir)
     elif FLAGS.mode == 'gen_submission':
