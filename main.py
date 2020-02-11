@@ -93,8 +93,9 @@ def main(argv):
                               net_scale=FLAGS.net_scale,
                               learn_rate=FLAGS.learn_rate)
     elif FLAGS.mode == 'train_bert':
-
-        train_bert(model_dir=FLAGS.model_dir, model_name=FLAGS.model_name)
+        train_bert(model_dir=FLAGS.model_dir,
+                   model_name=FLAGS.model_name,
+                   epochs=FLAGS.epochs)
     elif FLAGS.mode == 'create_ensemble':
         avg_ensemble(FLAGS.model_dir)
     elif FLAGS.mode == 'gen_submission':

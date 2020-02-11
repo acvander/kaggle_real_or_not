@@ -19,8 +19,8 @@ def build_bert_model(bert_layer, max_len=512):
             [input_word_ids, input_mask, segment_ids])
         clf_output = Bidirectional(LSTM(128))(sequence_output)
         #         clf_output = sequence_output[:, 0, :]
-        dense = Dense(1)(clf_output)
-        out = Activation('sigmoid')(dense)
+        dense = Dense(2)(clf_output)
+        out = Activation('softmax')(dense)
 
         model = Model(inputs={
             'word_ids': input_word_ids,
