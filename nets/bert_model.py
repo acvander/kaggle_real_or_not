@@ -8,6 +8,7 @@ from tensorflow_addons.metrics import F1Score
 
 
 def build_bert_model(bert_layer, max_len=512):
+    '''adapted from https://www.kaggle.com/lhideki/bert-with-kfold'''
     def inner_build_model():
         input_word_ids = Input(shape=(max_len, ),
                                dtype=tf.int32,
