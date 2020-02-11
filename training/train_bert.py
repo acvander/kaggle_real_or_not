@@ -1,6 +1,6 @@
 import os
 import shelve
-from utils.plot.plot import plot_k_fold_data, plot_training_data
+import gc
 
 from absl import logging
 import tensorflow as tf
@@ -14,6 +14,7 @@ from sklearn.model_selection import StratifiedKFold
 from tensorflow_addons.metrics import F1Score
 
 from nets.bert_model import build_bert_model
+from utils.plot.plot import plot_k_fold_data, plot_training_data
 
 
 def compile_model(model,
@@ -65,7 +66,8 @@ def train_bert(model_dir: str = './tmp/bert_default',
                model_name: str = 'bert_default',
                shuffle: bool = True,
                fig_name: str = 'bert',
-               epochs: int = 3):
+               epochs: int = 3,
+               subset: float = 1.0):
     # load data
     logging.info('loading data')
     with shelve.open('./tmp/bert_data/bert_shelf') as shelf:
@@ -80,6 +82,10 @@ def train_bert(model_dir: str = './tmp/bert_default',
     os.makedirs(model_dir, exist_ok=True)
 
     splitter = StratifiedKFold(n_splits=3, shuffle=shuffle, random_state=2020)
+
+    # Subset data for debugging
+    train_output = train_output[:int(subset * len(train_output))]
+
     x = range(len(train_output))
     k_folds = list(splitter.split(
         x, train_output[:, 0]))  # only need to use one value for grouping
@@ -122,8 +128,11 @@ def train_bert(model_dir: str = './tmp/bert_default',
             '{}_{}.png'.format(os.path.join(model_dir, fig_name), i))
         histories.append(history)
 
+        del bert_layer
         del model
         tf.keras.backend.clear_session()
+        gc.collect()
+
     plot_k_fold_data(
         histories, '{}_combined.png'.format(os.path.join(model_dir, fig_name)))
 
