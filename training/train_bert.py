@@ -1,6 +1,7 @@
 import os
 import shelve
 import gc
+import time
 
 from absl import logging
 import tensorflow as tf
@@ -132,6 +133,8 @@ def train_bert(model_dir: str = './tmp/bert_default',
         del model
         tf.keras.backend.clear_session()
         gc.collect()
+        logging.info('waiting for memory clear')
+        time.sleep(60)
 
     plot_k_fold_data(
         histories, '{}_combined.png'.format(os.path.join(model_dir, fig_name)))
