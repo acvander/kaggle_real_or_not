@@ -1,5 +1,6 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['TFHUB_CACHE_DIR'] = '/home/adam/.tfhub'
 
 from typing import Dict, Sequence, Tuple
 from ast import literal_eval
@@ -15,7 +16,7 @@ from nets.avg_ensemble import avg_ensemble
 from training.train_k_folds import train_k_folds
 from preprocessing.preprocess_bert import preprocess_bert
 from training.train_bert import train_bert
-from nets.bert.bert_ensemble import create_bert_ensemble
+from nets.bert.bert_ensemble import eval_bert_ensemble
 
 logging.set_verbosity(logging.INFO)
 
@@ -23,7 +24,7 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_enum('mode', 'gen_submission', [
     'preprocess', 'preprocess_bert', 'train', 'train_k_fold', 'train_bert',
-    'gen_submission', 'create_ensemble', 'create_bert_ensemble'
+    'gen_submission', 'create_ensemble', 'eval_bert_ensemble'
 ], 'defines mode to run app')
 flags.DEFINE_string('train_path', './data/train.csv', 'path of train.csv')
 flags.DEFINE_string('test_path', './data/test.csv', 'path of train.csv')
@@ -100,9 +101,9 @@ def main(argv):
                    subset=FLAGS.subset)
     elif FLAGS.mode == 'create_ensemble':
         avg_ensemble(FLAGS.model_dir)
-    elif FLAGS.mode == 'create_bert_ensemble':
-        create_bert_ensemble(model_dir=FLAGS.model_dir,
-                             model_name=FLAGS.model_name)
+    elif FLAGS.mode == 'eval_bert_ensemble':
+        eval_bert_ensemble(model_dir=FLAGS.model_dir,
+                           model_name=FLAGS.model_name)
     elif FLAGS.mode == 'gen_submission':
         train_df = pd.read_csv('./tmp/train.csv',
                                converters={"hashtags": literal_eval})

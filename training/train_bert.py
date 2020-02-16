@@ -33,18 +33,28 @@ def compile_model(model,
 
 
 def create_callbacks(learn_rate: float = 0.001,
-                     model_path: str = './tmp/model.h5',
+                     model_dir: str = './tmp/debug_bert',
+                     model_name: str = 'bert',
+                     iteration: int = 0,
                      epochs: int = 25,
                      min_delta: float = 0.01):
     callbacks = []
-    checkpoint = ModelCheckpoint(model_path,
-                                 'val_f1_score',
-                                 verbose=1,
-                                 save_best_only=True,
-                                 mode='max')
+    model_path = os.path.join(model_dir,
+                              model_name + '_' + str(iteration) + '.h5')
+    cp_args = {'verbose': 1, 'save_best_only': True, 'mode': 'max'}
+
+    checkpoint = ModelCheckpoint(model_path, 'val_f1_score', **cp_args)
     callbacks.append(checkpoint)
 
-    early_stop_patience = epochs // 3
+    weights_path = os.path.join(model_dir,
+                                model_name + str(iteration) + '_weights.h5')
+    weights_checkpoint = ModelCheckpoint(weights_path,
+                                         'val_f1_score',
+                                         save_weights_only=True,
+                                         **cp_args)
+    callbacks.append(weights_checkpoint)
+
+    early_stop_patience = epochs // 2
     logging.info('early stop patience {}'.format(early_stop_patience))
     early_stop = EarlyStopping('val_f1_score',
                                min_delta=min_delta,
@@ -54,6 +64,9 @@ def create_callbacks(learn_rate: float = 0.001,
     callbacks.append(early_stop)
 
     reduce_lr_patience = early_stop_patience // 2 - 1
+    if reduce_lr_patience < 2:
+        reduce_lr_patience = 2
+
     logging.info('reduce lr patience {}'.format(reduce_lr_patience))
     reduce_lr = ReduceLROnPlateau('val_f1_score',
                                   factor=0.1,
@@ -68,10 +81,14 @@ def create_callbacks(learn_rate: float = 0.001,
 
 def train_bert(model_dir: str = './tmp/bert_default',
                model_name: str = 'bert_default',
+               batch_size: int = 8,
                shuffle: bool = True,
                fig_name: str = 'bert',
                epochs: int = 3,
                subset: float = 1.0):
+    # create save directory
+    os.makedirs(model_dir, exist_ok=True)
+
     # load data
     logging.info('loading data')
     with shelve.open('./tmp/bert_data/bert_shelf') as shelf:
@@ -87,8 +104,6 @@ def train_bert(model_dir: str = './tmp/bert_default',
     model = build_bert_model(bert_layer, max_len=max_token_len)
     initial_model_path = os.path.join(model_dir, 'initial_weights.h5')
     model.save_weights(initial_model_path)
-
-    os.makedirs(model_dir, exist_ok=True)
 
     splitter = StratifiedKFold(n_splits=3, shuffle=shuffle, random_state=2020)
 
@@ -124,14 +139,17 @@ def train_bert(model_dir: str = './tmp/bert_default',
         }
         fold_valid_output = train_output[valid_idxs]
 
-        callbacks = create_callbacks(model_path=model_path, epochs=epochs)
+        callbacks = create_callbacks(model_dir=model_dir,
+                                     model_name=model_name,
+                                     iteration=i,
+                                     epochs=epochs)
 
         history = model.fit(fold_train_input,
                             fold_train_output,
                             validation_data=(fold_valid_input,
                                              fold_valid_output),
                             epochs=epochs,
-                            batch_size=8,
+                            batch_size=batch_size,
                             callbacks=callbacks)
         plot_training_data(
             history.history,
