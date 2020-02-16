@@ -16,7 +16,7 @@ from nets.avg_ensemble import avg_ensemble
 from training.train_k_folds import train_k_folds
 from preprocessing.preprocess_bert import preprocess_bert
 from training.train_bert import train_bert
-from nets.bert.bert_ensemble import eval_bert_ensemble
+from postprocessing.bert_ensemble import eval_bert_ensemble
 
 logging.set_verbosity(logging.INFO)
 

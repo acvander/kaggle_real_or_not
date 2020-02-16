@@ -3,6 +3,7 @@ import shelve
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from tensorflow.keras import Model
 from tensorflow.keras import layers
@@ -51,10 +52,9 @@ def eval_bert_ensemble(model_dir: str = './tmp/debug_bert',
         train_output = shelf['train_output']
         test_input = shelf['test_input']
 
-    sub_models = []
+        test_ids = shelf['test_ids']
 
     # get names of all models in directory
-    model_files = Path(model_dir).glob('*.h5')
     weight_files = Path(model_dir).glob('*_weights.h5')
     train_predictions = []
     test_predictions = []
@@ -87,8 +87,13 @@ def eval_bert_ensemble(model_dir: str = './tmp/debug_bert',
     avg = np.mean(train_predictions, axis=0)
     pred = np.argmax(avg, axis=1)
     train_f1 = f1_score(np.argmax(train_output, axis=1), pred)
-    print('train f1_score: {}'.format(train_f1))
+    logging.info('train f1_score: {}'.format(train_f1))
 
     avg = np.mean(test_predictions, axis=0)
     pred = np.argmax(avg, axis=1)
+
+    # generate submission
+    submission_path = os.path.join(model_dir, 'submission.csv')
+    df = pd.DataFrame(data={'id': test_ids, 'target': pred})
+    df.to_csv(submission_path, index=False)
     return

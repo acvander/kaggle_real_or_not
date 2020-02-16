@@ -79,5 +79,7 @@ def preprocess_bert(train_df: pd.DataFrame, test_df: pd.DataFrame):
         shelf['test_input'] = test_input
         shelf['max_token_len'] = max_token_len
         shelf['bert_url'] = bert_url
+        shelf['train_ids'] = train_df['id'].to_list()
+        shelf['test_ids'] = test_df['id'].to_list()
 
     return
